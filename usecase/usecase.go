@@ -79,16 +79,35 @@ func (u UC) GetFullArticle(id int) (models.Article, error) {
 }
 
 func (u UC) GetArticle(id int, languages []string) (models.Article, error) {
-	//TODO implement me
-	panic("implement me")
+	result := db.Article{}
+	err := u.db.
+		Joins("JOIN translations ON translations.language IN ? AND article_id = articles.id", languages). // выбранные языки
+		First(&result, id).                                                                               // указываем, что нужно подгрузить статью по айди
+		Error
+	if err != nil {
+		return models.Article{}, err
+	}
+
+	article := models.Article{
+		ID:           result.ID,
+		Translations: make([]models.Translation, len(result.Translations)),
+	}
+	for i, translation := range result.Translations {
+		article.Translations[i] = models.Translation{
+			Language:  translation.Language,
+			Text:      translation.Text,
+			ID:        translation.ID,
+			ArticleID: id,
+		}
+	}
+	return article, nil
 }
 
 func (u UC) DeleteTranslations(articleID int, languages []string) (err error) {
-	//TODO implement me
-	panic("implement me")
+	return u.db.Delete(&db.Translation{}, "article_id = ? AND translations.language IN ?", articleID, languages).Error
 }
 
 func (u UC) DeleteArticle(id int) (err error) {
-	//TODO implement me
-	panic("implement me")
+	u.db.Delete(&db.Translation{}, "article_id = ?", id)
+	return u.db.Delete(&db.Article{}, "id = ?", id).Error
 }

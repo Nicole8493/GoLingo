@@ -9,6 +9,6 @@ type Translation struct {
 	ID        int    `gorm:"primaryKey"`
 	Language  string `gorm:"index:articleLanguage"`
 	Text      string
-	ArticleID int `gorm:"index:articleLanguage"`
+	ArticleID int `gorm:"index:articleLanguage"` // внеш ключ
 	Article   Article
 }
