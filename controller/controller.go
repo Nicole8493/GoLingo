@@ -62,12 +62,12 @@ func New(
 
 	apiGroup := app.Group("/api", controller.authMiddleware)
 	{
-		apiGroup.Post("/createArticle", controller.handlerCreateArticle)
-		apiGroup.Post("/updateTranslations", controller.handlerUpdateTranslations)
-		apiGroup.Get("/getFullArticle", controller.handlerGetFullArticle)
-		apiGroup.Get("/getArticle", controller.handlerGetArticle)
-		apiGroup.Delete("deleteTranslations", controller.handlerDeleteTranslations)
-		apiGroup.Delete("/deleteArticle", controller.handlerDeleteArticle)
+		apiGroup.Post("/article", controller.handlerCreateArticle)
+		apiGroup.Post("/translations/:id", controller.handlerUpdateTranslations)
+		apiGroup.Get("/article/full/:id", controller.handlerGetFullArticle)
+		apiGroup.Get("/article/:id", controller.handlerGetArticle)
+		apiGroup.Delete("/translations/:id", controller.handlerDeleteTranslations)
+		apiGroup.Delete("/article/:id", controller.handlerDeleteArticle)
 	}
 
 	controller.fiber = app

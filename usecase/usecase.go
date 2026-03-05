@@ -7,7 +7,7 @@ import (
 )
 
 type Usecase interface {
-	CreateArticle(translations []models.Translation) (id int, err error)
+	CreateArticle(translations models.Article) (id int, err error)
 	UpdateTranslations(id int, translations []models.Translation) (err error)
 	GetFullArticle(id int) (models.Article, error)
 	GetArticle(id int, languages []string) (models.Article, error)
@@ -19,23 +19,23 @@ type UC struct {
 	db *gorm.DB
 }
 
-func (u UC) CreateArticle(translations []models.Translation) (id int, err error) {
-	article := db.Article{
+func (u UC) CreateArticle(article models.Article) (id int, err error) {
+	articleDB := db.Article{
 		ID:           0,
-		Translations: make([]db.Translation, len(translations)),
+		Translations: make([]db.Translation, len(article.Translations)),
 	}
-	for i, translation := range translations {
-		article.Translations[i] = db.Translation{
+	for i, translation := range article.Translations {
+		articleDB.Translations[i] = db.Translation{
 			ID:       translation.ID,
 			Language: translation.Language,
 			Text:     translation.Text,
 		}
 	}
-	err = u.db.Create(&article).Error
+	err = u.db.Create(&articleDB).Error
 	if err != nil {
 		return 0, err
 	}
-	return article.ID, nil
+	return articleDB.ID, nil
 }
 
 func (u UC) UpdateTranslations(id int, translations []models.Translation) (err error) {
