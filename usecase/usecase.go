@@ -19,6 +19,10 @@ type UC struct {
 	db *gorm.DB
 }
 
+func New(db *gorm.DB) *UC {
+	return &UC{db: db}
+}
+
 func (u UC) CreateArticle(article models.Article) (id int, err error) {
 	articleDB := db.Article{
 		ID:           0,

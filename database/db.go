@@ -2,6 +2,7 @@ package db
 
 import (
 	"fmt"
+	"github.com/Nicole8493/GoLingo/config"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -10,7 +11,7 @@ import (
 	"time"
 )
 
-func New(config domain.Config) (*gorm.DB, error) {
+func New(config config.Config) (*gorm.DB, error) {
 	connectString := ""
 	var db *gorm.DB
 	var err error
