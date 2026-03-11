@@ -51,6 +51,10 @@ func New(config config.Config) (*gorm.DB, error) {
 	err = db.AutoMigrate(
 		Article{},
 		Translation{},
+		Dictionary{},
+		Group{},
+		ArticleAndGroup{},
+		User{},
 	)
 	if err != nil {
 		return nil, err

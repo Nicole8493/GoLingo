@@ -8,11 +8,17 @@ import (
 
 type Usecase interface {
 	CreateArticle(translations models.Article) (id int, err error)
+	CreateDictionary(dictionary models.Dictionary) (id int, err error)
+	CreateGroup(group models.Group) (id int, err error)
 	UpdateTranslations(id int, translations []models.Translation) (err error)
+	AddGroupArticles(groupID int, articlesID []int) (err error)
 	GetFullArticle(id int) (models.Article, error)
 	GetArticle(id int, languages []string) (models.Article, error)
 	DeleteTranslations(articleID int, languages []string) (err error)
 	DeleteArticle(id int) (err error)
+	DeleteGroup(id int) (err error)
+	DeleteDictionary(id int) (err error)
+	DeleteGroupArticles(groupID int, articlesID []int) (err error)
 }
 
 type UC struct {

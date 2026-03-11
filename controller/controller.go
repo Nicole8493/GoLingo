@@ -58,11 +58,17 @@ func New(
 	apiGroup := app.Group("/api")
 	{
 		apiGroup.Post("/article", controller.handlerCreateArticle)
+		apiGroup.Post("/dictionary", controller.handlerCreateDictionary)
+		apiGroup.Post("/group", controller.handlerCreateGroup)
 		apiGroup.Post("/translations/:id", controller.handlerUpdateTranslations)
+		apiGroup.Post("/group/:id", controller.handlerAddGroupArticles)
 		apiGroup.Get("/article/full/:id", controller.handlerGetFullArticle)
 		apiGroup.Get("/article/:id", controller.handlerGetArticle)
 		apiGroup.Delete("/translations/:id", controller.handlerDeleteTranslations)
 		apiGroup.Delete("/article/:id", controller.handlerDeleteArticle)
+		apiGroup.Delete("/group/:id", controller.handlerDeleteGroup)
+		apiGroup.Delete("/dictionary/:id", controller.handlerDeleteDictionary)
+		apiGroup.Post("/group/:id", controller.handlerDeleteGroupArticles)
 	}
 
 	controller.fiber = app
