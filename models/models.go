@@ -1,9 +1,12 @@
 package models
 
+import "time"
+
 type Article struct {
 	ID           int           `json:"id"`
 	Translations []Translation `json:"translations"`
 	DictionaryID int
+	CreatedAt    time.Time
 	// Pin          int // для закрепления статей
 }
 
@@ -41,4 +44,10 @@ type User struct {
 	ID    int    `json:"id"`
 	Name  string `json:"name"`
 	Email string `json:"email"`
+}
+
+type Order struct {
+	Type      string `json:"type"`
+	Direction string `json:"direction"`
+	Language  string `json:"language"`
 }

@@ -1,10 +1,13 @@
 package db
 
+import "time"
+
 type Article struct {
 	ID           int `gorm:"primaryKey"`
 	Translations []Translation
 	DictionaryID int
 	Dictionary   Dictionary
+	CreatedAt    time.Time
 	// Pin          int // для закрепления статей
 }
 

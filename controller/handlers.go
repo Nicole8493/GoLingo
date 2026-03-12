@@ -143,9 +143,17 @@ func (c *Controller) handlerGetArticlesByGroup(ctx *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
+	order := ctx.Query("order")
+	orderDirection := ctx.Query("orderDirection")
+	orderLanguage := ctx.Query("orderLanguage")
+	modelOrder := models.Order{
+		Type:      order,
+		Direction: orderDirection,
+		Language:  orderLanguage,
+	}
 
 	// вызов юзкейса
-	articles, err := c.usecase.GetArticlesByGroup(groupIDInt, languagesList, limit, offsetInt)
+	articles, err := c.usecase.GetArticlesByGroup(groupIDInt, languagesList, limit, offsetInt, modelOrder)
 	if err != nil {
 		return err
 	}
@@ -170,7 +178,15 @@ func (c *Controller) handlerGetArticlesByDictionary(ctx *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	articles, err := c.usecase.GetArticlesByDictionary(dictionaryIDInt, languagesList, limit, offsetInt)
+	order := ctx.Query("order")
+	orderDirection := ctx.Query("orderDirection")
+	orderLanguage := ctx.Query("orderLanguage")
+	modelOrder := models.Order{
+		Type:      order,
+		Direction: orderDirection,
+		Language:  orderLanguage,
+	}
+	articles, err := c.usecase.GetArticlesByDictionary(dictionaryIDInt, languagesList, limit, offsetInt, modelOrder)
 	if err != nil {
 		return err
 	}

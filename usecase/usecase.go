@@ -1,9 +1,11 @@
 package usecase
 
 import (
+	"errors"
 	db "github.com/Nicole8493/GoLingo/database"
 	"github.com/Nicole8493/GoLingo/models"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type Usecase interface {
@@ -14,8 +16,8 @@ type Usecase interface {
 	AddGroupArticles(groupID int, articlesID []int) (err error)
 	GetFullArticle(id int) (models.Article, error)
 	GetArticle(id int, languages []string) (models.Article, error)
-	GetArticlesByGroup(groupID int, languages []string, limit int, offset int) ([]models.Article, error)
-	GetArticlesByDictionary(dictionaryID int, languages []string, limit int, offset int) ([]models.Article, error)
+	GetArticlesByGroup(groupID int, languages []string, limit int, offset int, order models.Order) ([]models.Article, error)
+	GetArticlesByDictionary(dictionaryID int, languages []string, limit int, offset int, order models.Order) ([]models.Article, error)
 	DeleteTranslations(articleID int, languages []string) (err error)
 	DeleteArticle(id int) (err error)
 	DeleteGroup(id int) (err error)
@@ -159,23 +161,62 @@ func (u *UC) GetArticle(id int, languages []string) (models.Article, error) {
 	return article, nil
 }
 
-func (u *UC) GetArticlesByGroup(groupID int, languages []string, limit int, offset int) (articles []models.Article, err error) {
-	err = u.db.Joins("ArticleAndGroup").Where("group_id = ?", groupID).Preload("Translations", "Translations.language IN ?", languages).
-		Limit(limit).Offset(offset).Find(&articles).Error
+func (u *UC) GetArticlesByGroup(groupID int, languages []string, limit int, offset int, order models.Order) (articles []models.Article, err error) {
+	request := u.db.Joins("ArticleAndGroup").Where("group_id = ?", groupID).Preload("Translations", "Translations.language IN ?", languages).
+		Limit(limit).Offset(offset)
+
+	request, err = u.SortArticles(request, order)
+	if err != nil {
+		return articles, err
+	}
+
+	err = request.Find(&articles).Error
 	if err != nil {
 		return articles, err
 	}
 	return articles, nil
 }
 
-func (u *UC) GetArticlesByDictionary(dictionaryID int, languages []string, limit int, offset int) (articles []models.Article, err error) {
-	err = u.db.Where("dictionary_id = ?", dictionaryID).
+func (u *UC) GetArticlesByDictionary(dictionaryID int, languages []string, limit int, offset int, order models.Order) (articles []models.Article, err error) {
+	request := u.db.Where("dictionary_id = ?", dictionaryID).
 		Preload("Translations", "Translations.language IN ?", languages).
-		Limit(limit).Offset(offset).Find(&articles).Error
+		Limit(limit).Offset(offset)
+
+	request, err = u.SortArticles(request, order)
+	if err != nil {
+		return articles, err
+	}
+
+	err = request.Find(&articles).Error
 	if err != nil {
 		return articles, err
 	}
 	return articles, nil
+}
+
+func (u *UC) SortArticles(request *gorm.DB, order models.Order) (*gorm.DB, error) {
+	if order.Type == "" {
+		return request, nil // default
+	}
+
+	isDesc := false
+	switch order.Direction {
+	case "asc", "":
+	case "desc":
+		isDesc = true
+	default:
+		return request, errors.New("direction is wrong")
+	}
+	switch order.Type {
+	case "language":
+		request = request.Joins("JOIN translations t ON t.article_id = articles.id AND t.language = ?", order.Language).
+			Order(clause.OrderByColumn{Column: clause.Column{Name: "t.text"}, Desc: isDesc})
+	case "date":
+		request = request.Order(clause.OrderByColumn{Column: clause.Column{Name: "created_at"}, Desc: isDesc})
+	default:
+		return request, errors.New("order is wrong")
+	}
+	return request, nil
 }
 
 func (u *UC) DeleteTranslations(articleID int, languages []string) (err error) {
