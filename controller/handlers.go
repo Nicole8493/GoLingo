@@ -124,6 +124,59 @@ func (c *Controller) handlerGetArticle(ctx *fiber.Ctx) error {
 	// обратно кодируем в JSON id для пользователя
 	return ctx.JSON(data)
 }
+
+func (c *Controller) handlerGetArticlesByGroup(ctx *fiber.Ctx) error {
+	groupID := ctx.Params("id")
+	groupIDInt, err := strconv.Atoi(groupID)
+	if err != nil {
+		return err
+	}
+	languages := ctx.Query("languages")
+	languagesList := strings.Split(languages, ",")
+	limitString := ctx.Query("limit")
+	limit, err := strconv.Atoi(limitString)
+	if err != nil {
+		return err
+	}
+	offsetString := ctx.Query("offset")
+	offsetInt, err := strconv.Atoi(offsetString)
+	if err != nil {
+		return err
+	}
+
+	// вызов юзкейса
+	articles, err := c.usecase.GetArticlesByGroup(groupIDInt, languagesList, limit, offsetInt)
+	if err != nil {
+		return err
+	}
+	return ctx.JSON(articles)
+}
+
+func (c *Controller) handlerGetArticlesByDictionary(ctx *fiber.Ctx) error {
+	dictionaryID := ctx.Params("id")
+	dictionaryIDInt, err := strconv.Atoi(dictionaryID)
+	if err != nil {
+		return err
+	}
+	languages := ctx.Query("languages")
+	languagesList := strings.Split(languages, ",")
+	limitString := ctx.Query("limit")
+	limit, err := strconv.Atoi(limitString)
+	if err != nil {
+		return err
+	}
+	offsetString := ctx.Query("offset")
+	offsetInt, err := strconv.Atoi(offsetString)
+	if err != nil {
+		return err
+	}
+	articles, err := c.usecase.GetArticlesByDictionary(dictionaryIDInt, languagesList, limit, offsetInt)
+	if err != nil {
+		return err
+	}
+	return ctx.JSON(articles)
+}
+
 func (c *Controller) handlerDeleteTranslations(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
 	idInt, err := strconv.Atoi(id)

@@ -64,6 +64,8 @@ func New(
 		apiGroup.Post("/group/:id", controller.handlerAddGroupArticles)
 		apiGroup.Get("/article/full/:id", controller.handlerGetFullArticle)
 		apiGroup.Get("/article/:id", controller.handlerGetArticle)
+		apiGroup.Get("/articles/group/:id", controller.handlerGetArticlesByGroup)
+		apiGroup.Get("/articles/dictionary/:id", controller.handlerGetArticlesByDictionary)
 		apiGroup.Delete("/translations/:id", controller.handlerDeleteTranslations)
 		apiGroup.Delete("/article/:id", controller.handlerDeleteArticle)
 		apiGroup.Delete("/group/:id", controller.handlerDeleteGroup)

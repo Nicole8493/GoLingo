@@ -4,6 +4,7 @@ type Article struct {
 	ID           int `gorm:"primaryKey"`
 	Translations []Translation
 	DictionaryID int
+	Dictionary   Dictionary
 	// Pin          int // для закрепления статей
 }
 
@@ -16,10 +17,11 @@ type Translation struct {
 }
 
 type Dictionary struct {
-	ID               int
+	ID               int `gorm:"primaryKey"`
 	Name             string
 	UserID           int
-	BaseDictionaryID int // айди моего словаря, кот будет отражаться у дргуих пользователей
+	BaseDictionaryID int         // айди моего словаря, кот будет отражаться у дргуих пользователей
+	BaseDictionary   *Dictionary // встраиваем Dictionary в самого себя для создания рекурсивной ссылки
 	User             User
 }
 
@@ -29,11 +31,14 @@ type Group struct {
 	Name   string //например, подгруппы по теме
 	Color  string
 	UserID int
+	User   User
 }
 
 type ArticleAndGroup struct {
 	ArticleID int
 	GroupID   int
+	Group     Group
+	Article   Article
 	//Order     int // порядок, ручная сорировка
 }
 
