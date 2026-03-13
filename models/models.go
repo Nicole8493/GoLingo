@@ -41,9 +41,10 @@ type ArticleAndGroup struct {
 }
 
 type User struct {
-	ID    int    `json:"id"`
-	Name  string `json:"name"`
-	Email string `json:"email"`
+	ID           int    `json:"id"`
+	Name         string `json:"name"`
+	Email        string `json:"email"`
+	PasswordHash []byte `json:"passwordHash"`
 }
 
 type Order struct {

@@ -1,9 +1,12 @@
 package usecase
 
 import (
+	"crypto/ecdsa"
 	"errors"
 	db "github.com/Nicole8493/GoLingo/database"
 	"github.com/Nicole8493/GoLingo/models"
+	"github.com/golang-jwt/jwt"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -18,6 +21,8 @@ type Usecase interface {
 	GetArticle(id int, languages []string) (models.Article, error)
 	GetArticlesByGroup(groupID int, languages []string, limit int, offset int, order models.Order) ([]models.Article, error)
 	GetArticlesByDictionary(dictionaryID int, languages []string, limit int, offset int, order models.Order) ([]models.Article, error)
+	Register(email, name string, password []byte) error
+	Login(email string, password []byte) (models.User, string, error)
 	DeleteTranslations(articleID int, languages []string) (err error)
 	DeleteArticle(id int) (err error)
 	DeleteGroup(id int) (err error)
@@ -26,11 +31,12 @@ type Usecase interface {
 }
 
 type UC struct {
-	db *gorm.DB
+	db  *gorm.DB
+	key *ecdsa.PrivateKey
 }
 
-func New(db *gorm.DB) *UC {
-	return &UC{db: db}
+func New(db *gorm.DB, key *ecdsa.PrivateKey) *UC {
+	return &UC{db: db, key: key}
 }
 
 func (u *UC) CreateArticle(article models.Article) (id int, err error) {
@@ -217,6 +223,50 @@ func (u *UC) SortArticles(request *gorm.DB, order models.Order) (*gorm.DB, error
 		return request, errors.New("order is wrong")
 	}
 	return request, nil
+}
+
+func (u *UC) Register(email, name string, password []byte) error {
+	hashedPassword, err := bcrypt.GenerateFromPassword(password, 10) // уровень сложности хэширования (средний)
+	if err != nil {
+		return err
+	}
+	user := models.User{
+		Email:        email,
+		Name:         name,
+		PasswordHash: hashedPassword,
+	}
+	err = u.db.Create(&user).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *UC) Login(email string, password []byte) (models.User, string, error) {
+	user := models.User{}
+	err := u.db.Where("email = ?", email).First(&user).Error
+	if err != nil {
+		return user, "", err
+	}
+	err = bcrypt.CompareHashAndPassword(user.PasswordHash, password)
+	if err != nil {
+		return user, "", err
+	}
+
+	var (
+		t    *jwt.Token
+		sign string // signed token
+	)
+
+	t = jwt.NewWithClaims(jwt.SigningMethodES256,
+		jwt.MapClaims{
+			"user_id": user.ID,
+		})
+	sign, err = t.SignedString(u.key)
+	if err != nil {
+		return user, "", err
+	}
+	return user, sign, nil
 }
 
 func (u *UC) DeleteTranslations(articleID int, languages []string) (err error) {

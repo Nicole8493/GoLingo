@@ -2,8 +2,10 @@ package controller
 
 import (
 	"context"
+	"crypto/ecdsa"
 	"github.com/Nicole8493/GoLingo/config"
 	"github.com/Nicole8493/GoLingo/usecase"
+	jwtware "github.com/gofiber/contrib/jwt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
@@ -22,12 +24,13 @@ type Controller struct {
 	config  config.Config
 	usecase usecase.Usecase
 	db      *gorm.DB
+	key     *ecdsa.PrivateKey
 }
 
 func New(
 	config config.Config,
 	usecase usecase.Usecase,
-	db *gorm.DB,
+	db *gorm.DB, key *ecdsa.PrivateKey,
 ) (*Controller, error) {
 	app := fiber.New()
 
@@ -35,6 +38,7 @@ func New(
 		config:  config,
 		usecase: usecase,
 		db:      db,
+		key:     key,
 	}
 
 	app.Use(logger.New(logger.ConfigDefault))
@@ -57,23 +61,29 @@ func New(
 
 	apiGroup := app.Group("/api")
 	{
-		apiGroup.Post("/article", controller.handlerCreateArticle)
-		apiGroup.Post("/dictionary", controller.handlerCreateDictionary)
-		apiGroup.Post("/group", controller.handlerCreateGroup)
-		apiGroup.Post("/translations/:id", controller.handlerUpdateTranslations)
-		apiGroup.Post("/group/:id", controller.handlerAddGroupArticles)
 		apiGroup.Get("/article/full/:id", controller.handlerGetFullArticle)
 		apiGroup.Get("/article/:id", controller.handlerGetArticle)
 		apiGroup.Get("/articles/group/:id", controller.handlerGetArticlesByGroup)
 		apiGroup.Get("/articles/dictionary/:id", controller.handlerGetArticlesByDictionary)
-		apiGroup.Delete("/translations/:id", controller.handlerDeleteTranslations)
-		apiGroup.Delete("/article/:id", controller.handlerDeleteArticle)
-		apiGroup.Delete("/group/:id", controller.handlerDeleteGroup)
-		apiGroup.Delete("/dictionary/:id", controller.handlerDeleteDictionary)
-		apiGroup.Post("/group/:id", controller.handlerDeleteGroupArticles)
+		apiGroup.Post("/register", controller.handlerRegister)
+		apiGroup.Post("/login", controller.handlerLogin)
 	}
 
-	controller.fiber = app
+	restrictedApiGroup := apiGroup.Group("", jwtware.New(jwtware.Config{
+		SigningKey: jwtware.SigningKey{Key: key},
+	}))
+	{
+		restrictedApiGroup.Post("/article", controller.handlerCreateArticle)
+		restrictedApiGroup.Post("/dictionary", controller.handlerCreateDictionary)
+		restrictedApiGroup.Post("/group", controller.handlerCreateGroup)
+		restrictedApiGroup.Post("/translations/:id", controller.handlerUpdateTranslations)
+		restrictedApiGroup.Post("/group/articles/:id", controller.handlerAddGroupArticles)
+		restrictedApiGroup.Delete("/translations/:id", controller.handlerDeleteTranslations)
+		restrictedApiGroup.Delete("/article/:id", controller.handlerDeleteArticle)
+		restrictedApiGroup.Delete("/group/:id", controller.handlerDeleteGroup)
+		restrictedApiGroup.Delete("/group/articles/:id", controller.handlerDeleteGroupArticles)
+		restrictedApiGroup.Delete("/dictionary/:id", controller.handlerDeleteDictionary)
+	}
 	return controller, nil
 }
 

@@ -193,6 +193,29 @@ func (c *Controller) handlerGetArticlesByDictionary(ctx *fiber.Ctx) error {
 	return ctx.JSON(articles)
 }
 
+func (c *Controller) handlerRegister(ctx *fiber.Ctx) error {
+	email := ctx.FormValue("email")
+	name := ctx.FormValue("name")
+	password := ctx.FormValue("password")
+	passwordBytes := []byte(password)
+	err := c.usecase.Register(email, name, passwordBytes)
+	if err != nil {
+		return err
+	}
+	return ctx.JSON("ok")
+}
+
+func (c *Controller) handlerLogin(ctx *fiber.Ctx) error {
+	email := ctx.FormValue("email")
+	password := ctx.FormValue("password")
+	passwordBytes := []byte(password)
+	user, sign, err := c.usecase.Login(email, passwordBytes)
+	if err != nil {
+		return err
+	}
+	return ctx.JSON(map[string]interface{}{"user": user, "token": sign, "ok": true})
+}
+
 func (c *Controller) handlerDeleteTranslations(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
 	idInt, err := strconv.Atoi(id)

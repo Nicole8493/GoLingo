@@ -46,7 +46,8 @@ type ArticleAndGroup struct {
 }
 
 type User struct {
-	ID    int
-	Name  string
-	Email string
+	ID           int
+	Name         string
+	Email        string `gorm:"uniqueIndex"` // не будет 2 юзеров с одинаковым мэйлом
+	PasswordHash []byte
 }
