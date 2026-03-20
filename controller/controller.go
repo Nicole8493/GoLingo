@@ -2,7 +2,6 @@ package controller
 
 import (
 	"context"
-	"crypto/ecdsa"
 	"github.com/Nicole8493/GoLingo/config"
 	"github.com/Nicole8493/GoLingo/usecase"
 	jwtware "github.com/gofiber/contrib/jwt"
@@ -24,13 +23,13 @@ type Controller struct {
 	config  config.Config
 	usecase usecase.Usecase
 	db      *gorm.DB
-	key     *ecdsa.PrivateKey
+	key     string
 }
 
 func New(
 	config config.Config,
 	usecase usecase.Usecase,
-	db *gorm.DB, key *ecdsa.PrivateKey,
+	db *gorm.DB,
 ) (*Controller, error) {
 	app := fiber.New()
 
@@ -38,7 +37,7 @@ func New(
 		config:  config,
 		usecase: usecase,
 		db:      db,
-		key:     key,
+		key:     config.PrivateKey,
 	}
 
 	app.Use(logger.New(logger.ConfigDefault))
@@ -70,7 +69,7 @@ func New(
 	}
 
 	restrictedApiGroup := apiGroup.Group("", jwtware.New(jwtware.Config{
-		SigningKey: jwtware.SigningKey{Key: key},
+		SigningKey: jwtware.SigningKey{Key: config.PrivateKey},
 	}))
 	{
 		restrictedApiGroup.Post("/article", controller.handlerCreateArticle)

@@ -3,9 +3,18 @@ package controller
 import (
 	"github.com/Nicole8493/GoLingo/models"
 	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v5"
 	"strconv"
 	"strings"
 )
+
+func (c *Controller) getUserID(ctx *fiber.Ctx) int {
+	// мидлваря проверяет токен и сохраняет его в Locals (после хэндлер достает токен из Locals)
+	user := ctx.Locals("user").(*jwt.Token)    // получаем токен
+	claims := user.Claims.(jwt.MapClaims)      // достаем полезную нагрузку (айди юзера)
+	userID := int(claims["user_id"].(float64)) // claims["user_id"] получаем пустой интерфейс, .(float64) конвертируем интер-с в флоат, а затем в инт
+	return userID
+}
 
 func (c *Controller) handlerCreateArticle(ctx *fiber.Ctx) error {
 	// достаем данные для передачи в юзкейс
@@ -14,7 +23,7 @@ func (c *Controller) handlerCreateArticle(ctx *fiber.Ctx) error {
 		return err
 	}
 	// вызов юзкейса
-	id, err := c.usecase.CreateArticle(*data)
+	id, err := c.usecase.CreateArticle(c.getUserID(ctx), *data)
 	if err != nil {
 		return err
 	}
@@ -23,11 +32,12 @@ func (c *Controller) handlerCreateArticle(ctx *fiber.Ctx) error {
 }
 
 func (c *Controller) handlerCreateDictionary(ctx *fiber.Ctx) error {
+
 	data := new(models.Dictionary)
 	if err := ctx.BodyParser(data); err != nil {
 		return err
 	}
-	id, err := c.usecase.CreateDictionary(*data)
+	id, err := c.usecase.CreateDictionary(c.getUserID(ctx), *data)
 	if err != nil {
 		return err
 	}
@@ -39,7 +49,7 @@ func (c *Controller) handlerCreateGroup(ctx *fiber.Ctx) error {
 	if err := ctx.BodyParser(data); err != nil {
 		return err
 	}
-	id, err := c.usecase.CreateGroup(*data)
+	id, err := c.usecase.CreateGroup(c.getUserID(ctx), *data)
 	if err != nil {
 		return err
 	}
@@ -59,7 +69,7 @@ func (c *Controller) handlerUpdateTranslations(ctx *fiber.Ctx) error {
 	}
 
 	// вызов юзкейса
-	err = c.usecase.UpdateTranslations(idInt, *data)
+	err = c.usecase.UpdateTranslations(c.getUserID(ctx), idInt, *data)
 	if err != nil {
 		return err
 	}
@@ -85,7 +95,7 @@ func (c *Controller) handlerAddGroupArticles(ctx *fiber.Ctx) error {
 		articlesIDsInt = append(articlesIDsInt, idInt)
 	}
 
-	err = c.usecase.AddGroupArticles(groupIDInt, articlesIDsInt)
+	err = c.usecase.AddGroupArticles(c.getUserID(ctx), groupIDInt, articlesIDsInt)
 	if err != nil {
 		return err
 	}
@@ -226,7 +236,7 @@ func (c *Controller) handlerDeleteTranslations(ctx *fiber.Ctx) error {
 	languagesList := strings.Split(languages, ",")
 
 	// вызов юзкейса
-	err = c.usecase.DeleteTranslations(idInt, languagesList)
+	err = c.usecase.DeleteTranslations(c.getUserID(ctx), idInt, languagesList)
 	if err != nil {
 		return err
 	}
@@ -238,7 +248,7 @@ func (c *Controller) handlerDeleteArticle(ctx *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	err = c.usecase.DeleteArticle(idInt)
+	err = c.usecase.DeleteArticle(c.getUserID(ctx), idInt)
 	if err != nil {
 		return err
 	}
@@ -251,7 +261,7 @@ func (c *Controller) handlerDeleteGroup(ctx *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	err = c.usecase.DeleteGroup(idInt)
+	err = c.usecase.DeleteGroup(c.getUserID(ctx), idInt)
 	if err != nil {
 		return err
 	}
@@ -264,7 +274,7 @@ func (c *Controller) handlerDeleteDictionary(ctx *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	err = c.usecase.DeleteDictionary(idInt)
+	err = c.usecase.DeleteDictionary(c.getUserID(ctx), idInt)
 	if err != nil {
 		return err
 	}
@@ -289,7 +299,7 @@ func (c *Controller) handlerDeleteGroupArticles(ctx *fiber.Ctx) error {
 		articlesIDsInt = append(articlesIDsInt, idInt)
 	}
 
-	err = c.usecase.DeleteGroupArticles(groupIDInt, articlesIDsInt)
+	err = c.usecase.DeleteGroupArticles(c.getUserID(ctx), groupIDInt, articlesIDsInt)
 	if err != nil {
 		return err
 	}

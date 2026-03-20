@@ -1,7 +1,6 @@
 package usecase
 
 import (
-	"crypto/ecdsa"
 	"errors"
 	db "github.com/Nicole8493/GoLingo/database"
 	"github.com/Nicole8493/GoLingo/models"
@@ -12,37 +11,44 @@ import (
 )
 
 type Usecase interface {
-	CreateArticle(translations models.Article) (id int, err error)
-	CreateDictionary(dictionary models.Dictionary) (id int, err error)
-	CreateGroup(group models.Group) (id int, err error)
-	UpdateTranslations(id int, translations []models.Translation) (err error)
-	AddGroupArticles(groupID int, articlesID []int) (err error)
+	CreateArticle(userID int, translations models.Article) (id int, err error)
+	CreateDictionary(userID int, dictionary models.Dictionary) (id int, err error)
+	CreateGroup(userID int, group models.Group) (id int, err error)
+	UpdateTranslations(userID int, id int, translations []models.Translation) (err error)
+	AddGroupArticles(userID int, groupID int, articlesID []int) (err error)
 	GetFullArticle(id int) (models.Article, error)
 	GetArticle(id int, languages []string) (models.Article, error)
 	GetArticlesByGroup(groupID int, languages []string, limit int, offset int, order models.Order) ([]models.Article, error)
 	GetArticlesByDictionary(dictionaryID int, languages []string, limit int, offset int, order models.Order) ([]models.Article, error)
 	Register(email, name string, password []byte) error
 	Login(email string, password []byte) (models.User, string, error)
-	DeleteTranslations(articleID int, languages []string) (err error)
-	DeleteArticle(id int) (err error)
-	DeleteGroup(id int) (err error)
-	DeleteDictionary(id int) (err error)
-	DeleteGroupArticles(groupID int, articlesID []int) (err error)
+	DeleteTranslations(userID int, articleID int, languages []string) (err error)
+	DeleteArticle(userID int, id int) (err error)
+	DeleteGroup(userID int, id int) (err error)
+	DeleteDictionary(userID int, id int) (err error)
+	DeleteGroupArticles(userID int, groupID int, articlesID []int) (err error)
 }
 
 type UC struct {
 	db  *gorm.DB
-	key *ecdsa.PrivateKey
+	key string
 }
 
-func New(db *gorm.DB, key *ecdsa.PrivateKey) *UC {
+func New(db *gorm.DB, key string) *UC {
 	return &UC{db: db, key: key}
 }
 
-func (u *UC) CreateArticle(article models.Article) (id int, err error) {
+func (u *UC) CreateArticle(userID int, article models.Article) (id int, err error) {
+	var dictionary *db.Dictionary
+	u.db.Where("user_id = ? AND id = ?", userID, article.DictionaryID).Find(&dictionary)
+	if dictionary == nil {
+		return 0, errors.New("can't create article in this dictionary")
+	}
+
 	articleDB := db.Article{
 		ID:           0,
 		Translations: make([]db.Translation, len(article.Translations)),
+		DictionaryID: article.DictionaryID,
 	}
 	for i, translation := range article.Translations {
 		articleDB.Translations[i] = db.Translation{
@@ -58,11 +64,11 @@ func (u *UC) CreateArticle(article models.Article) (id int, err error) {
 	return articleDB.ID, nil
 }
 
-func (u *UC) CreateDictionary(dictionary models.Dictionary) (id int, err error) {
+func (u *UC) CreateDictionary(userID int, dictionary models.Dictionary) (id int, err error) {
 	dictionaryDB := db.Dictionary{
 		ID:               0,
 		Name:             dictionary.Name,
-		UserID:           dictionary.UserID,
+		UserID:           userID,
 		BaseDictionaryID: dictionary.BaseDictionaryID,
 	}
 	err = u.db.Create(&dictionaryDB).Error
@@ -72,12 +78,12 @@ func (u *UC) CreateDictionary(dictionary models.Dictionary) (id int, err error) 
 	return dictionaryDB.ID, nil
 }
 
-func (u *UC) CreateGroup(group models.Group) (id int, err error) {
+func (u *UC) CreateGroup(userID int, group models.Group) (id int, err error) {
 	groupDB := db.Group{
 		ID:     0,
 		Type:   group.Type,
 		Name:   group.Name,
-		UserID: group.UserID,
+		UserID: userID,
 		Color:  group.Color,
 	}
 	err = u.db.Create(&groupDB).Error
@@ -87,13 +93,23 @@ func (u *UC) CreateGroup(group models.Group) (id int, err error) {
 	return groupDB.ID, nil
 }
 
-func (u *UC) UpdateTranslations(id int, translations []models.Translation) (err error) {
+func (u *UC) UpdateTranslations(userID int, articleID int, translations []models.Translation) (err error) {
+	var articleDB db.Article // articleID содержит Dictionary, кот содержит юзерайди владельца
+	err = u.db.Where("id = ?", articleID).Joins("Dictionary").Find(&articleDB).Error
+	if err != nil {
+		return err
+	}
+
+	if articleDB.Dictionary.UserID != userID {
+		return errors.New("can't update dictionary")
+	}
+
 	for _, translation := range translations {
 		err = u.db.Save(&db.Translation{
 			ID:        translation.ID,
 			Language:  translation.Language,
 			Text:      translation.Text,
-			ArticleID: id,
+			ArticleID: articleID,
 		}).Error
 		if err != nil {
 			return err
@@ -102,7 +118,17 @@ func (u *UC) UpdateTranslations(id int, translations []models.Translation) (err 
 	return nil
 }
 
-func (u *UC) AddGroupArticles(groupID int, articlesID []int) (err error) {
+func (u *UC) AddGroupArticles(userID int, groupID int, articlesID []int) (err error) {
+	var groupDB db.Group
+	err = u.db.Where("id = ?", groupID).Find(&groupDB).Error
+	if err != nil {
+		return err
+	}
+
+	if groupDB.UserID != userID {
+		return errors.New("can't group articles")
+	}
+
 	var group = make([]db.ArticleAndGroup, 0, len(articlesID))
 	for _, id := range articlesID {
 		group = append(group, db.ArticleAndGroup{
@@ -171,7 +197,7 @@ func (u *UC) GetArticlesByGroup(groupID int, languages []string, limit int, offs
 	request := u.db.Joins("ArticleAndGroup").Where("group_id = ?", groupID).Preload("Translations", "Translations.language IN ?", languages).
 		Limit(limit).Offset(offset)
 
-	request, err = u.SortArticles(request, order)
+	request, err = u.sortArticles(request, order)
 	if err != nil {
 		return articles, err
 	}
@@ -188,7 +214,7 @@ func (u *UC) GetArticlesByDictionary(dictionaryID int, languages []string, limit
 		Preload("Translations", "Translations.language IN ?", languages).
 		Limit(limit).Offset(offset)
 
-	request, err = u.SortArticles(request, order)
+	request, err = u.sortArticles(request, order)
 	if err != nil {
 		return articles, err
 	}
@@ -200,7 +226,7 @@ func (u *UC) GetArticlesByDictionary(dictionaryID int, languages []string, limit
 	return articles, nil
 }
 
-func (u *UC) SortArticles(request *gorm.DB, order models.Order) (*gorm.DB, error) {
+func (u *UC) sortArticles(request *gorm.DB, order models.Order) (*gorm.DB, error) {
 	if order.Type == "" {
 		return request, nil // default
 	}
@@ -269,23 +295,73 @@ func (u *UC) Login(email string, password []byte) (models.User, string, error) {
 	return user, sign, nil
 }
 
-func (u *UC) DeleteTranslations(articleID int, languages []string) (err error) {
+func (u *UC) DeleteTranslations(userID int, articleID int, languages []string) (err error) {
+	var articleDB db.Article // articleID содержит Dictionary, кот содержит юзерайди владельца
+	err = u.db.Where("id = ?", articleID).Joins("Dictionary").Find(&articleDB).Error
+	if err != nil {
+		return err
+	}
+
+	if articleDB.Dictionary.UserID != userID {
+		return errors.New("can't delete translations")
+	}
+
 	return u.db.Delete(&db.Translation{}, "article_id = ? AND translations.language IN ?", articleID, languages).Error
 }
 
-func (u *UC) DeleteArticle(id int) (err error) {
-	u.db.Delete(&db.Translation{}, "article_id = ?", id)
-	return u.db.Delete(&db.Article{}, "id = ?", id).Error
+func (u *UC) DeleteArticle(userID int, articleID int) (err error) {
+	var articleDB db.Article
+	err = u.db.Where("id = ?", articleID).Joins("Dictionary").Find(&articleDB).Error
+	if err != nil {
+		return err
+	}
+
+	if articleDB.Dictionary.UserID != userID {
+		return errors.New("can't delete article")
+	}
+
+	u.db.Delete(&db.Translation{}, "article_id = ?", articleID)
+	return u.db.Delete(&db.Article{}, "id = ?", articleID).Error
 }
 
-func (u *UC) DeleteGroup(id int) (err error) {
-	return u.db.Delete(&db.Group{}, "id = ?", id).Error
+func (u *UC) DeleteGroup(userID int, groupID int) (err error) {
+	var groupDB db.Group
+	err = u.db.Where("id = ?", groupID).Find(&groupDB).Error
+	if err != nil {
+		return err
+	}
+
+	if groupDB.UserID != userID {
+		return errors.New("can't delete group")
+	}
+
+	return u.db.Delete(&db.Group{}, "id = ?", groupID).Error
 }
 
-func (u *UC) DeleteDictionary(id int) (err error) {
-	return u.db.Delete(&db.Dictionary{}, "id = ?", id).Error
+func (u *UC) DeleteDictionary(userID int, dictionaryID int) (err error) {
+	var dictionaryDB db.Dictionary
+	err = u.db.Where("id = ?", dictionaryID).Find(&dictionaryDB).Error
+	if err != nil {
+		return err
+	}
+
+	if dictionaryDB.UserID != userID {
+		return errors.New("can't delete dictionary")
+	}
+
+	return u.db.Delete(&db.Dictionary{}, "id = ?", dictionaryID).Error
 }
 
-func (u *UC) DeleteGroupArticles(groupID int, articlesID []int) (err error) {
+func (u *UC) DeleteGroupArticles(userID int, groupID int, articlesID []int) (err error) {
+	var groupDB db.Group
+	err = u.db.Where("id = ?", groupID).Find(&groupDB).Error
+	if err != nil {
+		return err
+	}
+
+	if groupDB.UserID != userID {
+		return errors.New("can't delete group")
+	}
+
 	return u.db.Delete(&db.ArticleAndGroup{}, "article_id IN ? AND group_id = ?", articlesID, groupID).Error
 }

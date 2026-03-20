@@ -43,9 +43,9 @@ func main() {
 		logger.Fatal("failed to initialize database", zap.Error(err))
 	}
 
-	useCase := usecase.New(db)
+	useCase := usecase.New(db, cfg.PrivateKey)
 
-	controller, err := controller.New(cfg, useCase, db)
+	controller, err := controller.New(cfg, useCase, db, cfg.PrivateKey)
 	if err != nil {
 		logger.Fatal("failed to initialize controller", zap.Error(err))
 	}
