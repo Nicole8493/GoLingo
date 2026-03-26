@@ -14,6 +14,26 @@ import (
 	"os"
 )
 
+// @title           GoLingo API
+// @version         1.0
+// @description     GoLingo dictionary API.
+// @termsOfService  -
+
+// @contact.name   Nicole
+// @contact.url    @Nicole8493
+// @contact.email  anufrieva.s01@mail.ru
+
+// @license.name  Apache 2.0
+// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host      localhost:8080
+// @BasePath  /api
+
+// @securityDefinitions.basic  BasicAuth
+
+// @externalDocs.description  OpenAPI
+// @externalDocs.url          https://swagger.io/resources/open-api/
+
 func main() {
 	// Parse command line flags получили путь до файла конфиг
 	configPath := flag.String("config", "./cfg/config.yml", "path to config file (optional)")

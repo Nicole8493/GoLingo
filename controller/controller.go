@@ -80,8 +80,8 @@ func New(
 		restrictedApiGroup.Delete("/translations/:id", controller.handlerDeleteTranslations)
 		restrictedApiGroup.Delete("/article/:id", controller.handlerDeleteArticle)
 		restrictedApiGroup.Delete("/group/:id", controller.handlerDeleteGroup)
-		restrictedApiGroup.Delete("/group/articles/:id", controller.handlerDeleteGroupArticles)
 		restrictedApiGroup.Delete("/dictionary/:id", controller.handlerDeleteDictionary)
+		restrictedApiGroup.Delete("/group/articles/:id", controller.handlerDeleteGroupArticles)
 	}
 	return controller, nil
 }
