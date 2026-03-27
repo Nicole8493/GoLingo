@@ -65,7 +65,7 @@ func main() {
 
 	useCase := usecase.New(db, cfg.PrivateKey)
 
-	controller, err := controller.New(cfg, useCase, db, cfg.PrivateKey)
+	controller, err := controller.New(cfg, useCase, db)
 	if err != nil {
 		logger.Fatal("failed to initialize controller", zap.Error(err))
 	}

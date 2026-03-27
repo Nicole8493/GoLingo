@@ -22,11 +22,11 @@ func (c *Controller) getUserID(ctx *fiber.Ctx) int {
 // @Tags         articles
 // @Accept       json
 // @Produce      json
-// @Param        article   body   models.Article  true
+// @Param        article   body   models.Article  true   "article with translations"
 // @Success      200  {object}  int
-// @Failure      400  {object}  httputil.HTTPError
-// @Failure      404  {object}  httputil.HTTPError
-// @Failure      500  {object}  httputil.HTTPError
+// @Failure      400  {object}  fiber.Error
+// @Failure      404  {object}  fiber.Error
+// @Failure      500  {object}  fiber.Error
 // @Router       /article [post]
 func (c *Controller) handlerCreateArticle(ctx *fiber.Ctx) error {
 	// достаем данные для передачи в юзкейс
@@ -49,11 +49,11 @@ func (c *Controller) handlerCreateArticle(ctx *fiber.Ctx) error {
 // @Tags         dictionaries
 // @Accept       json
 // @Produce      json
-// @Param        dictionary   body  models.Dictionary  true
+// @Param        dictionary   body  models.Dictionary  true   "new dictionary"
 // @Success      200  {object}  int
-// @Failure      400  {object}  httputil.HTTPError
-// @Failure      404  {object}  httputil.HTTPError
-// @Failure      500  {object}  httputil.HTTPError
+// @Failure      400  {object}  fiber.Error
+// @Failure      404  {object}  fiber.Error
+// @Failure      500  {object}  fiber.Error
 // @Router       /dictionary [post]
 func (c *Controller) handlerCreateDictionary(ctx *fiber.Ctx) error {
 
@@ -74,11 +74,11 @@ func (c *Controller) handlerCreateDictionary(ctx *fiber.Ctx) error {
 // @Tags         groups
 // @Accept       json
 // @Produce      json
-// @Param        group   body   models.Group  true
+// @Param        group   body   models.Group  true   "new group"
 // @Success      200  {object}  int
-// @Failure      400  {object}  httputil.HTTPError
-// @Failure      404  {object}  httputil.HTTPError
-// @Failure      500  {object}  httputil.HTTPError
+// @Failure      400  {object}  fiber.Error
+// @Failure      404  {object}  fiber.Error
+// @Failure      500  {object}  fiber.Error
 // @Router       /group [post]
 func (c *Controller) handlerCreateGroup(ctx *fiber.Ctx) error {
 	data := new(models.Group)
@@ -98,12 +98,12 @@ func (c *Controller) handlerCreateGroup(ctx *fiber.Ctx) error {
 // @Tags         translations
 // @Accept       json
 // @Produce      json
-// @Param        translations   body   []models.Translation  true
-// @Param        articleID      path   int   true
+// @Param        translations   body   []models.Translation  true   "translations to update"
+// @Param        articleID      path   int   true   "articleID"
 // @Success      200  {object}  int
-// @Failure      400  {object}  httputil.HTTPError
-// @Failure      404  {object}  httputil.HTTPError
-// @Failure      500  {object}  httputil.HTTPError
+// @Failure      400  {object}  fiber.Error
+// @Failure      404  {object}  fiber.Error
+// @Failure      500  {object}  fiber.Error
 // @Router       /translations/{id} [post]
 func (c *Controller) handlerUpdateTranslations(ctx *fiber.Ctx) error {
 	data := new([]models.Translation)
@@ -132,12 +132,12 @@ func (c *Controller) handlerUpdateTranslations(ctx *fiber.Ctx) error {
 // @Tags         groups
 // @Accept       json
 // @Produce      json
-// @Param        groupID   path   int  true
-// @Param        articles  query   []int   true "articleIDs comma separated"
+// @Param        groupID   path   int  true  "groupID to save articles"
+// @Param        articles  query   []int   true  "articleIDs comma separated"
 // @Success      200  {object}  int
-// @Failure      400  {object}  httputil.HTTPError
-// @Failure      404  {object}  httputil.HTTPError
-// @Failure      500  {object}  httputil.HTTPError
+// @Failure      400  {object}  fiber.Error
+// @Failure      404  {object}  fiber.Error
+// @Failure      500  {object}  fiber.Error
 // @Router       /group/articles/{id} [post]
 func (c *Controller) handlerAddGroupArticles(ctx *fiber.Ctx) error {
 	groupID := ctx.Params("id")
@@ -169,15 +169,15 @@ func (c *Controller) handlerAddGroupArticles(ctx *fiber.Ctx) error {
 // @Description  Get full list of translations in article
 // @Tags         articles
 // @Produce      json
-// @Param        articleID   path   int  true
+// @Param        articleID   path   int  true  "articleID to get all translations"
 // @Success      200  {object}  models.Article
-// @Failure      400  {object}  httputil.HTTPError
-// @Failure      404  {object}  httputil.HTTPError
-// @Failure      500  {object}  httputil.HTTPError
+// @Failure      400  {object}  fiber.Error
+// @Failure      404  {object}  fiber.Error
+// @Failure      500  {object}  fiber.Error
 // @Router       /article/full/{id} [get]
 func (c *Controller) handlerGetFullArticle(ctx *fiber.Ctx) error {
-	id := ctx.Params("id")
-	idInt, err := strconv.Atoi(id)
+	articleID := ctx.Params("id")
+	idInt, err := strconv.Atoi(articleID)
 	if err != nil {
 		return err
 	}
@@ -196,12 +196,12 @@ func (c *Controller) handlerGetFullArticle(ctx *fiber.Ctx) error {
 // @Description  Get list of translations in article
 // @Tags         articles
 // @Produce      json
-// @Param        articleID   path   int  true
-// @Param        languages  query  []string  true
+// @Param        articleID   path   int  true  "articleID to get translations"
+// @Param        languages  query  []string  true  "languages comma separated"
 // @Success      200  {object}  models.Article
-// @Failure      400  {object}  httputil.HTTPError
-// @Failure      404  {object}  httputil.HTTPError
-// @Failure      500  {object}  httputil.HTTPError
+// @Failure      400  {object}  fiber.Error
+// @Failure      404  {object}  fiber.Error
+// @Failure      500  {object}  fiber.Error
 // @Router       /article/{id} [get]
 func (c *Controller) handlerGetArticle(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
@@ -226,17 +226,17 @@ func (c *Controller) handlerGetArticle(ctx *fiber.Ctx) error {
 // @Description  Get articles by group
 // @Tags         groups
 // @Produce      json
-// @Param        groupID   path  int  true
-// @Param        languages  query  []string  true
-// @Param        limit  query  int  true
-// @Param        offset  query  int  true
-// @Param        order  query  string  true
-// @Param        orderDirection  query  string  true
-// @Param        orderLanguage  query  string  true
+// @Param        groupID   path  int  true  "groupID to fet articles"
+// @Param        languages  query  []string  true  "languages comma separated"
+// @Param        limit  query  int  true  "limit"
+// @Param        offset  query  int  true  "offset"
+// @Param        order  query  string  true  "order"
+// @Param        orderDirection  query  string  true  "orderDirection"
+// @Param        orderLanguage  query  string  true  "orderLanguage"
 // @Success      200  {object}  []models.Article
-// @Failure      400  {object}  httputil.HTTPError
-// @Failure      404  {object}  httputil.HTTPError
-// @Failure      500  {object}  httputil.HTTPError
+// @Failure      400  {object}  fiber.Error
+// @Failure      404  {object}  fiber.Error
+// @Failure      500  {object}  fiber.Error
 // @Router       /articles/group/{id} [get]
 func (c *Controller) handlerGetArticlesByGroup(ctx *fiber.Ctx) error {
 	groupID := ctx.Params("id")
@@ -278,17 +278,17 @@ func (c *Controller) handlerGetArticlesByGroup(ctx *fiber.Ctx) error {
 // @Description  Get articles by dictionary
 // @Tags         dictionaries
 // @Produce      json
-// @Param        dictionaryID   path   int  true
-// @Param        languages  query  []string  true
-// @Param        limit  query  int  true
-// @Param        offset  query  int  true
-// @Param        order  query  string  true
-// @Param        orderDirection  query  string  true
-// @Param        orderLanguage  query  string  true
+// @Param        dictionaryID   path   int  true  "dictionaryID to get articles"
+// @Param        languages  query  []string  true  "languages comma separated"
+// @Param        limit  query  int  true  "limit"
+// @Param        offset  query  int  true  "offset"
+// @Param        order  query  string  true  "order"
+// @Param        orderDirection  query  string  true  "orderDirection"
+// @Param        orderLanguage  query  string  true  "orderLanguage"
 // @Success      200  {object}  []models.Article
-// @Failure      400  {object}  httputil.HTTPError
-// @Failure      404  {object}  httputil.HTTPError
-// @Failure      500  {object}  httputil.HTTPError
+// @Failure      400  {object}  fiber.Error
+// @Failure      404  {object}  fiber.Error
+// @Failure      500  {object}  fiber.Error
 // @Router       /articles/dictionary/{id} [get]
 func (c *Controller) handlerGetArticlesByDictionary(ctx *fiber.Ctx) error {
 	dictionaryID := ctx.Params("id")
@@ -329,13 +329,13 @@ func (c *Controller) handlerGetArticlesByDictionary(ctx *fiber.Ctx) error {
 // @Tags         users
 // @Accept       x-www-form-urlencoded
 // @Produce      json
-// @Param        email  formData  string  true
-// @Param        name  formData  string  true
-// @Param        password  formData  string  true
+// @Param        email  formData  string  true  "email"
+// @Param        name  formData  string  true  "name of user"
+// @Param        password  formData  string  true  "password"
 // @Success      200  {object}  string
-// @Failure      400  {object}  httputil.HTTPError
-// @Failure      404  {object}  httputil.HTTPError
-// @Failure      500  {object}  httputil.HTTPError
+// @Failure      400  {object}  fiber.Error
+// @Failure      404  {object}  fiber.Error
+// @Failure      500  {object}  fiber.Error
 // @Router       /register [post]
 func (c *Controller) handlerRegister(ctx *fiber.Ctx) error {
 	email := ctx.FormValue("email")
@@ -355,12 +355,12 @@ func (c *Controller) handlerRegister(ctx *fiber.Ctx) error {
 // @Tags         users
 // @Accept       x-www-form-urlencoded
 // @Produce      json
-// @Param        email  formData  string  true
-// @Param        password  formData  string  true
+// @Param        email  formData  string  true  "email"
+// @Param        password  formData  string  true  "password"
 // @Success      200  {object}  controller.Controller.handlerLogin.response
-// @Failure      400  {object}  httputil.HTTPError
-// @Failure      404  {object}  httputil.HTTPError
-// @Failure      500  {object}  httputil.HTTPError
+// @Failure      400  {object}  fiber.Error
+// @Failure      404  {object}  fiber.Error
+// @Failure      500  {object}  fiber.Error
 // @Router       /login [post]
 func (c *Controller) handlerLogin(ctx *fiber.Ctx) error {
 	email := ctx.FormValue("email")
@@ -387,12 +387,12 @@ func (c *Controller) handlerLogin(ctx *fiber.Ctx) error {
 // @Description  Delete translations
 // @Tags         translations
 // @Produce      json
-// @Param        articleID  path   int  true
-// @Param        languages   query  []string  true
+// @Param        articleID  path   int  true  "articleID"
+// @Param        languages   query  []string  true  "languages comma separated"
 // @Success      200  {object}  string
-// @Failure      400  {object}  httputil.HTTPError
-// @Failure      404  {object}  httputil.HTTPError
-// @Failure      500  {object}  httputil.HTTPError
+// @Failure      400  {object}  fiber.Error
+// @Failure      404  {object}  fiber.Error
+// @Failure      500  {object}  fiber.Error
 // @Router       /translations/{id} [delete]
 func (c *Controller) handlerDeleteTranslations(ctx *fiber.Ctx) error {
 	articleID := ctx.Params("id")
@@ -416,11 +416,11 @@ func (c *Controller) handlerDeleteTranslations(ctx *fiber.Ctx) error {
 // @Description  Delete article from dictionary (user must be article owner)
 // @Tags         articles
 // @Produce      json
-// @Param        articleID  path   int  true
+// @Param        articleID  path   int  true  "articleID"
 // @Success      200  {object}  string
-// @Failure      400  {object}  httputil.HTTPError
-// @Failure      404  {object}  httputil.HTTPError
-// @Failure      500  {object}  httputil.HTTPError
+// @Failure      400  {object}  fiber.Error
+// @Failure      404  {object}  fiber.Error
+// @Failure      500  {object}  fiber.Error
 // @Router       /article/{id} [delete]
 func (c *Controller) handlerDeleteArticle(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
@@ -440,11 +440,11 @@ func (c *Controller) handlerDeleteArticle(ctx *fiber.Ctx) error {
 // @Description  Delete group (user must be group owner)
 // @Tags         groups
 // @Produce      json
-// @Param        groupID  path   int  true
+// @Param        groupID  path   int  true  "groupID"
 // @Success      200  {object}  string
-// @Failure      400  {object}  httputil.HTTPError
-// @Failure      404  {object}  httputil.HTTPError
-// @Failure      500  {object}  httputil.HTTPError
+// @Failure      400  {object}  fiber.Error
+// @Failure      404  {object}  fiber.Error
+// @Failure      500  {object}  fiber.Error
 // @Router       /group/{id} [delete]
 func (c *Controller) handlerDeleteGroup(ctx *fiber.Ctx) error {
 	groupID := ctx.Params("id")
@@ -464,11 +464,11 @@ func (c *Controller) handlerDeleteGroup(ctx *fiber.Ctx) error {
 // @Description  Delete dictionary (user must be dictionary owner)
 // @Tags         dictionaries
 // @Produce      json
-// @Param        dictionaryID  path   int  true
+// @Param        dictionaryID  path   int  true  "dictionaryID"
 // @Success      200  {object}  string
-// @Failure      400  {object}  httputil.HTTPError
-// @Failure      404  {object}  httputil.HTTPError
-// @Failure      500  {object}  httputil.HTTPError
+// @Failure      400  {object}  fiber.Error
+// @Failure      404  {object}  fiber.Error
+// @Failure      500  {object}  fiber.Error
 // @Router       /dictionary/{id} [delete]
 func (c *Controller) handlerDeleteDictionary(ctx *fiber.Ctx) error {
 	dictionaryID := ctx.Params("id")
@@ -488,12 +488,12 @@ func (c *Controller) handlerDeleteDictionary(ctx *fiber.Ctx) error {
 // @Description  Delete articles fron group (user must be group owner)
 // @Tags         groups
 // @Produce      json
-// @Param        groupID  path  int  true
-// @Param        articles  query  []int  true  "comma separated"
+// @Param        groupID  path  int  true  "groupID"
+// @Param        articles  query  []int  true  "articles comma separated"
 // @Success      200  {object}  string
-// @Failure      400  {object}  httputil.HTTPError
-// @Failure      404  {object}  httputil.HTTPError
-// @Failure      500  {object}  httputil.HTTPError
+// @Failure      400  {object}  fiber.Error
+// @Failure      404  {object}  fiber.Error
+// @Failure      500  {object}  fiber.Error
 // @Router       /group/articles/{id} [delete]
 func (c *Controller) handlerDeleteGroupArticles(ctx *fiber.Ctx) error {
 	groupID := ctx.Params("id")
