@@ -284,11 +284,11 @@ func (u *UC) Login(email string, password []byte) (models.User, string, error) {
 		sign string // signed token
 	)
 
-	t = jwt.NewWithClaims(jwt.SigningMethodES256,
+	t = jwt.NewWithClaims(jwt.SigningMethodHS256,
 		jwt.MapClaims{
 			"user_id": user.ID,
 		})
-	sign, err = t.SignedString(u.key)
+	sign, err = t.SignedString([]byte(u.key))
 	if err != nil {
 		return user, "", err
 	}

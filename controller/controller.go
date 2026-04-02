@@ -38,6 +38,7 @@ func New(
 		usecase: usecase,
 		db:      db,
 		key:     config.PrivateKey,
+		fiber:   app,
 	}
 
 	app.Use(logger.New(logger.ConfigDefault))
@@ -69,7 +70,7 @@ func New(
 	}
 
 	restrictedApiGroup := apiGroup.Group("", jwtware.New(jwtware.Config{
-		SigningKey: jwtware.SigningKey{Key: config.PrivateKey},
+		SigningKey: jwtware.SigningKey{Key: []byte(config.PrivateKey)},
 	}))
 	{
 		restrictedApiGroup.Post("/article", controller.handlerCreateArticle)

@@ -23,7 +23,7 @@ type Dictionary struct {
 	ID               int `gorm:"primaryKey"`
 	Name             string
 	UserID           int
-	BaseDictionaryID int         // айди моего словаря, кот будет отражаться у дргуих пользователей
+	BaseDictionaryID int         `gorm:"default:null"` // айди моего словаря, кот будет отражаться у дргуих пользователей?, ставим нил по умолч
 	BaseDictionary   *Dictionary // встраиваем Dictionary в самого себя для создания рекурсивной ссылки
 	User             User
 }

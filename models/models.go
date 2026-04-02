@@ -3,9 +3,9 @@ package models
 import "time"
 
 type Article struct {
-	ID           int           `json:"id"`
-	Translations []Translation `json:"translations"`
-	DictionaryID int
+	ID           int           `json:"id"`           // праймари ки
+	Translations []Translation `json:"translations"` // просто встраивание табл
+	DictionaryID int           // внеш ключ
 	CreatedAt    time.Time
 	// Pin          int // для закрепления статей
 }
